@@ -1,0 +1,122 @@
+<!-- Frontend en HTML/CSS + JavaScript (formulario para clientes) -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Royal Café VR - Reservas</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #1a1a1a; color: #fff; padding: 20px; }
+    .formulario, .admin-login, .admin-panel { max-width: 500px; margin: auto; background: #2a2a2a; padding: 20px; border-radius: 10px; }
+    input, select, textarea, button { width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 5px; border: none; }
+    button { background-color: #8a5cf5; color: #fff; cursor: pointer; }
+    .admin-panel { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="formulario">
+  <h2>Reservar en Royal Café VR</h2>
+  <input id="nombre_vr" placeholder="Tu nombre en VR" />
+  <input id="nombre_discord" placeholder="Tu nombre en Discord" />
+  <label>Primera opción</label>
+  <select id="maid1">
+    <option>Maid A</option>
+    <option>Maid B</option>
+    <option>Mayordomo C</option>
+  </select>
+  <label>Segunda opción</label>
+  <select id="maid2">
+    <option>Maid A</option>
+    <option>Maid B</option>
+    <option>Mayordomo C</option>
+  </select>
+  <label>Tercera opción</label>
+  <select id="maid3">
+    <option>Maid A</option>
+    <option>Maid B</option>
+    <option>Mayordomo C</option>
+  </select>
+  <input type="datetime-local" id="fecha" />
+  <textarea id="especificaciones" placeholder="Especificaciones especiales"></textarea>
+  <button onclick="enviarReserva()">Enviar Reserva</button>
+</div>
+
+<div class="admin-login">
+  <h2>Admin Login</h2>
+  <input type="password" id="admin_password" placeholder="Contraseña de admin" />
+  <button onclick="loginAdmin()">Entrar</button>
+</div>
+
+<div class="admin-panel">
+  <h2>Citas Agendadas</h2>
+  <div id="citas"></div>
+</div>
+
+<script>
+const API = 'https://royal-cafe-vr.onrender.com'; // BACKEND (ajústalo luego de subirlo)
+
+function enviarReserva() {
+  fetch(`${API}/reservar`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      nombre_vr: document.getElementById('nombre_vr').value,
+      nombre_discord: document.getElementById('nombre_discord').value,
+      opciones: [
+        document.getElementById('maid1').value,
+        document.getElementById('maid2').value,
+        document.getElementById('maid3').value
+      ],
+      fecha: document.getElementById('fecha').value,
+      especificaciones: document.getElementById('especificaciones').value
+    })
+  })
+  .then(r => r.json())
+  .then(data => alert(data.message));
+}
+
+function loginAdmin() {
+  const password = document.getElementById('admin_password').value;
+  fetch(`${API}/admin/login`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ password })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      document.querySelector('.admin-panel').style.display = 'block';
+      cargarCitas();
+    } else {
+      alert('Contraseña incorrecta');
+    }
+  });
+}
+
+function cargarCitas() {
+  fetch(`${API}/admin/citas`).then(r => r.json()).then(citas => {
+    const cont = document.getElementById('citas');
+    cont.innerHTML = '';
+    citas.forEach(cita => {
+      const div = document.createElement('div');
+      div.innerHTML = `
+        <p><b>${cita.nombre_vr}</b> (${cita.nombre_discord}) - ${new Date(cita.fecha).toLocaleString()}</p>
+        <p>Opciones: ${cita.opciones.join(' / ')}</p>
+        <p>${cita.especificaciones}</p>
+        <p>Estado: ${cita.estado}</p>
+        <button onclick="marcarRealizada('${cita._id}')">Marcar como realizada</button><hr>
+      `;
+      cont.appendChild(div);
+    });
+  });
+}
+
+function marcarRealizada(id) {
+  fetch(`${API}/admin/marcar-realizada/${id}`, { method: 'PUT' })
+    .then(() => cargarCitas());
+}
+</script>
+
+</body>
+</html>
