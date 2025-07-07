@@ -24,7 +24,7 @@
       background-color: #5b2d1a;
       padding: 5px;
     }
-    .formulario, .admin-login, .admin-panel {
+    .formulario, .admin-login {
       background-color: #5b2d1a;
       border: 2px solid #e8a43b;
       border-radius: 12px;
@@ -58,13 +58,6 @@
     h2, h3 {
       color: #ffe9c4;
       text-align: center;
-    }
-    .log {
-      background-color: #2a150a;
-      border-left: 4px solid #f0b45c;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 0.9em;
     }
   </style>
 </head>
@@ -103,25 +96,9 @@
     <button onclick="loginAdmin()">Entrar</button>
   </div>
 
-  <div class="admin-panel">
-    <h2>Panel de Administración</h2>
-    <div>
-      <button onclick="filtrarCitas(false)">Ver pendientes</button>
-      <button onclick="filtrarCitas(true)">Ver realizadas</button>
-      <button onclick="cargarCitas()">Ver todas</button>
-    </div>
-    <div id="citas"></div>
-    <div class="admin-actions">
-      <h3>Registro de acciones</h3>
-      <div id="log" class="log"></div>
-    </div>
-  </div>
-
 <script>
 const API = 'https://royal-cafe-vr.onrender.com';
 const ADMIN_PASSWORD = 'RoyalCafeOctubre2024';
-let adminUser = '';
-let todasLasCitas = [];
 
 const realezaMaids = ["Ruru", "Bluemar", "Mysti", "Neerilya", "Ghosty", "Evelyn", "Lilium", "Brishy", "Miirmo", "Nekoyari", "Chise", "Ponyon", "Rotten", "Himeko", "Nishimura", "Kuru", "Miki", "Innie", "Mitsuki", "Nyanithea", "Yuyu", "Aleah", "Laylumisumi", "Tomie", "Nisha", "Chumi", "Mizu"];
 const imperialMaidsExtra = ["Alessia", "Momo", "Kanna", "Milkybel"];
@@ -207,59 +184,19 @@ function enviarReserva() {
     })
   })
   .then(r => r.json())
-  .then(data => alert(data.message));
+  .then(data => {
+    window.location.href = 'reserva-confirmada.html';
+  });
 }
 
 function loginAdmin() {
   const password = document.getElementById('admin_password').value;
   const usuario = document.getElementById('admin_user').value;
   if (password === ADMIN_PASSWORD) {
-    adminUser = usuario;
-    document.querySelector('.admin-panel').style.display = 'block';
-    cargarCitas();
+    window.location.href = 'admin.html?admin=' + encodeURIComponent(usuario);
   } else {
     alert('Contraseña incorrecta');
   }
-}
-
-function cargarCitas() {
-  fetch(`${API}/admin/citas`).then(r => r.json()).then(citas => {
-    todasLasCitas = citas;
-    mostrarCitas(citas);
-  });
-}
-
-function mostrarCitas(lista) {
-  const cont = document.getElementById('citas');
-  cont.innerHTML = '';
-  lista.forEach(cita => {
-    const div = document.createElement('div');
-    div.innerHTML = `
-      <p><b>${cita.nombre_vr}</b> (${cita.nombre_discord}) - ${new Date(cita.fecha).toLocaleDateString()}</p>
-      <p>Patreon: ${cita.nombre_patreon}</p>
-      <p>Rango: ${cita.rango} / Tipo: ${cita.tipo}</p>
-      <p>Opciones: ${cita.opciones.join(' / ')}</p>
-      <p>${cita.especificaciones}</p>
-      <p>Estado: ${cita.estado}</p>
-      <button onclick="marcarRealizada('${cita._id}')">Marcar como realizada</button><hr>
-    `;
-    cont.appendChild(div);
-  });
-}
-
-function marcarRealizada(id) {
-  fetch(`${API}/admin/marcar-realizada/${id}`, { method: 'PUT' })
-    .then(() => {
-      cargarCitas();
-      const log = document.getElementById('log');
-      const timestamp = new Date().toLocaleString();
-      log.innerHTML += `<div>[${timestamp}] ${adminUser} marcó como realizada la cita ID: ${id}</div>`;
-    });
-}
-
-function filtrarCitas(realizadas) {
-  const filtradas = todasLasCitas.filter(c => realizadas ? c.estado === 'realizada' : c.estado !== 'realizada');
-  mostrarCitas(filtradas);
 }
 
 window.onload = actualizarOpciones;
@@ -267,4 +204,3 @@ window.onload = actualizarOpciones;
 
 </body>
 </html>
-
