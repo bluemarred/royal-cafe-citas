@@ -185,7 +185,10 @@ function enviarReserva() {
   })
   .then(r => r.json())
   .then(data => {
-    window.location.href = 'reserva-confirmada.html';
+    window.location.href = "reserva-confirmada.html";
+  })
+  .catch(err => {
+    alert("Error al enviar la reserva. Intenta nuevamente más tarde.");
   });
 }
 
@@ -201,6 +204,9 @@ function loginAdmin() {
 
 window.onload = actualizarOpciones;
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
