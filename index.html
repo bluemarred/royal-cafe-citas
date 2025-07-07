@@ -97,8 +97,8 @@
   </div>
 
 <script>
-const API = 'https://formspree.io/f/xovwojjy';
 const ADMIN_PASSWORD = 'RoyalCafeOctubre2024';
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xovwojjy'; // ← Reemplaza esto con tu URL real
 
 const realezaMaids = ["Ruru", "Bluemar", "Mysti", "Neerilya", "Ghosty", "Evelyn", "Lilium", "Brishy", "Miirmo", "Nekoyari", "Chise", "Ponyon", "Rotten", "Himeko", "Nishimura", "Kuru", "Miki", "Innie", "Mitsuki", "Nyanithea", "Yuyu", "Aleah", "Laylumisumi", "Tomie", "Nisha", "Chumi", "Mizu"];
 const imperialMaidsExtra = ["Alessia", "Momo", "Kanna", "Milkybel"];
@@ -169,26 +169,34 @@ function enviarReserva() {
     if (uno) opciones.push(uno.value);
   }
 
-  fetch(`${API}/reservar`, {
+  const formData = {
+    nombre_vr: document.getElementById('nombre_vr').value,
+    nombre_discord: document.getElementById('nombre_discord').value,
+    nombre_patreon: document.getElementById('nombre_patreon').value,
+    rango,
+    tipo,
+    opciones: opciones.join(', '),
+    fecha: document.getElementById('fecha').value,
+    especificaciones: document.getElementById('especificaciones').value
+  };
+
+  fetch(FORMSPREE_ENDPOINT, {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      nombre_vr: document.getElementById('nombre_vr').value,
-      nombre_discord: document.getElementById('nombre_discord').value,
-      nombre_patreon: document.getElementById('nombre_patreon').value,
-      rango,
-      tipo,
-      opciones,
-      fecha: document.getElementById('fecha').value,
-      especificaciones: document.getElementById('especificaciones').value
-    })
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(formData)
   })
-  .then(r => r.json())
-  .then(data => {
-    window.location.href = "reserva-confirmada.html";
+  .then(response => {
+    if (response.ok) {
+      window.location.href = 'reserva-confirmada.html';
+    } else {
+      alert('Error al enviar la reserva. Intenta nuevamente más tarde.');
+    }
   })
-  .catch(err => {
-    alert("Error al enviar la reserva. Intenta nuevamente más tarde.");
+  .catch(error => {
+    alert('Error de conexión. Intenta más tarde.');
   });
 }
 
