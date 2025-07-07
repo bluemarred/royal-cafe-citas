@@ -34,6 +34,14 @@
     .seccion {
       margin-bottom: 40px;
     }
+    .mensaje-vacio {
+      background-color: #5b2d1a;
+      border: 1px solid #a4652b;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      color: #ffe9c4;
+    }
   </style>
 </head>
 <body>
@@ -41,7 +49,8 @@
   <div id="usuarioAdmin"></div>
   <div class="seccion">
     <h2>Reservas Pendientes</h2>
-    <table id="pendientes">
+    <div id="mensajePendientes" class="mensaje-vacio" style="display:none;">No hay reservas pendientes.</div>
+    <table id="pendientes" style="display:none;">
       <thead>
         <tr><th>Nombre VR</th><th>Discord</th><th>Fecha</th><th>Acción</th></tr>
       </thead>
@@ -50,7 +59,8 @@
   </div>
   <div class="seccion">
     <h2>Reservas Completadas</h2>
-    <table id="completadas">
+    <div id="mensajeCompletadas" class="mensaje-vacio" style="display:none;">No hay reservas completadas.</div>
+    <table id="completadas" style="display:none;">
       <thead>
         <tr><th>Nombre VR</th><th>Discord</th><th>Fecha</th><th>Detalles</th></tr>
       </thead>
@@ -59,7 +69,7 @@
   </div>
   <div class="seccion">
     <h2>Registro de Auditoría</h2>
-    <ul id="auditoria"></ul>
+    <ul id="auditoria" class="mensaje-vacio">No hay acciones registradas.</ul>
   </div>
 
 <script>
@@ -67,46 +77,62 @@ const urlParams = new URLSearchParams(window.location.search);
 const admin = urlParams.get('admin') || 'Desconocido';
 document.getElementById('usuarioAdmin').innerText = `Administrador: ${admin}`;
 
-// Simulación temporal de datos
-const reservas = [
-  { nombre_vr: "Yuki", discord: "yuki#1234", fecha: "2025-07-10", estado: "pendiente" },
-  { nombre_vr: "Luna", discord: "luna#5678", fecha: "2025-07-01", estado: "completada" },
-];
-
-const auditoria = [
-  { usuario: "Bluemar", accion: "Marcó reserva de Luna como completada" },
-  { usuario: "Lion", accion: "Revisó reservas del 10 de julio" }
-];
+// Simulación vacía para propósito funcional
+const reservas = [];
+const auditoria = [];
 
 function cargarDatos() {
   const pendientesBody = document.getElementById('pendientes').querySelector('tbody');
   const completadasBody = document.getElementById('completadas').querySelector('tbody');
+
+  const pendientes = reservas.filter(r => r.estado === 'pendiente');
+  const completadas = reservas.filter(r => r.estado === 'completada');
+
+  if (pendientes.length > 0) {
+    document.getElementById('pendientes').style.display = 'table';
+    pendientes.forEach(r => {
+      const fila = `<tr>
+        <td>${r.nombre_vr}</td>
+        <td>${r.discord}</td>
+        <td>${r.fecha}</td>
+        <td><button onclick=\"marcarCompletado('${r.nombre_vr}')\">Marcar como hecha</button></td>
+      </tr>`;
+      pendientesBody.innerHTML += fila;
+    });
+  } else {
+    document.getElementById('mensajePendientes').style.display = 'block';
+  }
+
+  if (completadas.length > 0) {
+    document.getElementById('completadas').style.display = 'table';
+    completadas.forEach(r => {
+      const fila = `<tr>
+        <td>${r.nombre_vr}</td>
+        <td>${r.discord}</td>
+        <td>${r.fecha}</td>
+        <td>Ver ficha</td>
+      </tr>`;
+      completadasBody.innerHTML += fila;
+    });
+  } else {
+    document.getElementById('mensajeCompletadas').style.display = 'block';
+  }
+
   const logList = document.getElementById('auditoria');
-
-  reservas.forEach(r => {
-    const fila = `<tr>
-      <td>${r.nombre_vr}</td>
-      <td>${r.discord}</td>
-      <td>${r.fecha}</td>
-      <td>
-        ${r.estado === 'pendiente' ? `<button onclick="marcarCompletado('${r.nombre_vr}')">Marcar como hecha</button>` : '—'}
-      </td>
-    </tr>`;
-
-    if (r.estado === 'pendiente') pendientesBody.innerHTML += fila;
-    else completadasBody.innerHTML += fila.replace('—', 'Ver ficha');
-  });
-
-  auditoria.forEach(entry => {
-    const item = document.createElement('li');
-    item.innerText = `${entry.usuario}: ${entry.accion}`;
-    logList.appendChild(item);
-  });
+  if (auditoria.length === 0) {
+    logList.innerHTML = '<li>No hay acciones registradas.</li>';
+  } else {
+    logList.innerHTML = '';
+    auditoria.forEach(entry => {
+      const item = document.createElement('li');
+      item.innerText = `${entry.usuario}: ${entry.accion}`;
+      logList.appendChild(item);
+    });
+  }
 }
 
 function marcarCompletado(nombre) {
   alert(`Reserva de ${nombre} marcada como completada.`);
-  // Aquí iría un fetch() para actualizar en el servidor si estuviera en producción
   location.reload();
 }
 
