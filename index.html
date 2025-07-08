@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Royal Café VR - Reservas</title>
-  <link rel="icon" href="vrcicon.png" type="image/png">
+  <link rel="icon" href="vrcicon.png" type="image/png" />
   <style>
     body {
       background-color: #3e1f0d;
@@ -98,7 +98,7 @@
 
 <script>
 const ADMIN_PASSWORD = 'RoyalCafeOctubre2024';
-const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xovwojjy'; // ← Reemplaza esto con tu URL real
+const BACKEND_URL = 'https://royalcafe-backend.onrender.com';
 
 const realezaMaids = ["Ruru", "Bluemar", "Mysti", "Neerilya", "Ghosty", "Evelyn", "Lilium", "Brishy", "Miirmo", "Nekoyari", "Chise", "Ponyon", "Rotten", "Himeko", "Nishimura", "Kuru", "Miki", "Innie", "Mitsuki", "Nyanithea", "Yuyu", "Aleah", "Laylumisumi", "Tomie", "Nisha", "Chumi", "Mizu"];
 const imperialMaidsExtra = ["Alessia", "Momo", "Kanna", "Milkybel"];
@@ -170,33 +170,29 @@ function enviarReserva() {
   }
 
   const formData = {
-    nombre_vr: document.getElementById('nombre_vr').value,
-    nombre_discord: document.getElementById('nombre_discord').value,
-    nombre_patreon: document.getElementById('nombre_patreon').value,
-    rango,
-    tipo,
-    opciones: opciones.join(', '),
-    fecha: document.getElementById('fecha').value,
-    especificaciones: document.getElementById('especificaciones').value
+    NombreVR: document.getElementById('nombre_vr').value,
+    Discord: document.getElementById('nombre_discord').value,
+    Patreon: document.getElementById('nombre_patreon').value,
+    Rango: rango,
+    Tipo: tipo,
+    Opcion: opciones.join(', '),
+    Fecha: document.getElementById('fecha').value,
+    Especificaciones: document.getElementById('especificaciones').value
   };
 
-  fetch(FORMSPREE_ENDPOINT, {
+  fetch(`${BACKEND_URL}/reservas`, {
     method: 'POST',
     headers: {
-      'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(formData)
   })
-  .then(response => {
-    if (response.ok) {
-      window.location.href = 'reserva-confirmada.html';
-    } else {
-      alert('Error al enviar la reserva. Intenta nuevamente más tarde.');
-    }
+  .then(response => response.json())
+  .then(() => {
+    alert('Reserva enviada. ¡Gracias por apoyar a Royal Café!');
   })
-  .catch(error => {
-    alert('Error de conexión. Intenta más tarde.');
+  .catch(() => {
+    alert('Error al enviar la reserva');
   });
 }
 
@@ -212,9 +208,6 @@ function loginAdmin() {
 
 window.onload = actualizarOpciones;
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
