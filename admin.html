@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Panel de Administración - Royal Café VR</title>
-  <link rel="icon" href="vrcicon.png" type="image/png">
+  <title>Royal Café VR - Reservas</title>
+  <link rel="icon" href="vrcicon.png" type="image/png" />
   <style>
     body {
       background-color: #3e1f0d;
@@ -13,108 +13,201 @@
       margin: 0;
       padding: 0;
     }
-    .container {
-      max-width: 900px;
-      margin: 80px auto;
+    .header-logo {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid #f0b45c;
       background-color: #5b2d1a;
-      padding: 20px;
+      padding: 5px;
+    }
+    .formulario, .admin-login {
+      background-color: #5b2d1a;
       border: 2px solid #e8a43b;
       border-radius: 12px;
+      padding: 20px;
+      margin: 80px auto 30px auto;
+      max-width: 600px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .reserva {
+    input, select, textarea {
       background-color: #3e1f0d;
       border: 1px solid #a4652b;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 15px;
+      color: #ffe9c4;
+      padding: 10px;
+      border-radius: 6px;
+      width: 100%;
+      margin-bottom: 10px;
     }
     button {
-      margin-top: 10px;
       background-color: #f0b45c;
       color: #3e1f0d;
       font-weight: bold;
       border: none;
-      border-radius: 6px;
-      padding: 8px;
+      border-radius: 8px;
+      padding: 12px;
       cursor: pointer;
+      transition: background-color 0.3s;
     }
     button:hover {
       background-color: #e8a43b;
     }
+    h2, h3 {
+      color: #ffe9c4;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Panel de Administración</h1>
-    <div id="listaReservas">Cargando reservas...</div>
+  <img src="vrcicon.png" alt="Royal Cafe Logo" class="header-logo">
+  <div class="formulario">
+    <h2>Reservar en Royal Café VR</h2>
+    <input id="nombre_vr" placeholder="Tu nombre en VR" required />
+    <input id="nombre_discord" placeholder="Tu nombre en Discord" required />
+    <input id="nombre_patreon" placeholder="Tu nombre en Patreon" required />
+
+    <label for="rango">Rango</label>
+    <select id="rango" onchange="actualizarOpciones()">
+      <option value="Realeza">Realeza</option>
+      <option value="Imperial">Imperial</option>
+    </select>
+
+    <label for="tipo">Cita con</label>
+    <select id="tipo" onchange="actualizarOpciones()">
+      <option value="maid">Maid</option>
+      <option value="mayordomo">Mayordomo</option>
+    </select>
+
+    <div id="opciones-cita"></div>
+
+    <label for="fecha">Fecha (día y mes)</label>
+    <input type="date" id="fecha" required />
+    <textarea id="especificaciones" placeholder="Especificaciones especiales"></textarea>
+    <button onclick="enviarReserva()">Enviar Reserva</button>
   </div>
 
-  <script>
-    const admin = new URLSearchParams(window.location.search).get("admin") || "Desconocido";
+  <div class="admin-login">
+    <h2>Admin Login</h2>
+    <input type="text" id="admin_user" placeholder="Tu nombre de usuario" required />
+    <input type="password" id="admin_password" placeholder="Contraseña de admin" required />
+    <button onclick="loginAdmin()">Entrar</button>
+  </div>
 
-    async function cargarReservas() {
-      try {
-        const response = await fetch("https://formspree.io/api/forms/xovwojjy/submissions", {
-          headers: {
-            "Accept": "application/json"
-          }
-        });
-        const data = await response.json();
+<script>
+const ADMIN_PASSWORD = 'RoyalCafeOctubre2024';
+const BACKEND_URL = 'https://royalcafe-backend.onrender.com';
 
-        const contenedor = document.getElementById("listaReservas");
-        contenedor.innerHTML = "";
+const realezaMaids = ["Ruru", "Bluemar", "Mysti", "Neerilya", "Ghosty", "Evelyn", "Lilium", "Brishy", "Miirmo", "Nekoyari", "Chise", "Ponyon", "Rotten", "Himeko", "Nishimura", "Kuru", "Miki", "Innie", "Mitsuki", "Nyanithea", "Yuyu", "Aleah", "Laylumisumi", "Tomie", "Nisha", "Chumi", "Mizu"];
+const imperialMaidsExtra = ["Alessia", "Momo", "Kanna", "Milkybel"];
+const realezaMayordomos = ["Symphony", "Blue", "Chuchis", "Jinku", "Fox Hatai", "Millyo", "Cris", "Spark", "Bael", "Zero", "Lion", "Daniel", "Klaus", "Rexprel", "Herz", "Aikos", "Coosmic", "Makoto", "Kayn"];
+const imperialMayordomosExtra = ["Velzhar", "Samael"];
 
-        if (!data.submissions || data.submissions.length === 0) {
-          contenedor.innerHTML = "<p>No hay reservas existentes.</p>";
-          return;
-        }
+function actualizarOpciones() {
+  const rango = document.getElementById('rango').value;
+  const tipo = document.getElementById('tipo').value;
+  const contenedor = document.getElementById('opciones-cita');
+  contenedor.innerHTML = '';
 
-        data.submissions.forEach((reserva, index) => {
-          const div = document.createElement("div");
-          div.className = "reserva";
-          div.innerHTML = `
-            <strong>Nombre VR:</strong> ${reserva.data.nombre_vr}<br>
-            <strong>Discord:</strong> ${reserva.data.nombre_discord}<br>
-            <strong>Patreon:</strong> ${reserva.data.nombre_patreon}<br>
-            <strong>Rango:</strong> ${reserva.data.rango}<br>
-            <strong>Tipo:</strong> ${reserva.data.tipo}<br>
-            <strong>Opciones:</strong> ${reserva.data.opciones}<br>
-            <strong>Fecha:</strong> ${reserva.data.fecha}<br>
-            <strong>Notas:</strong> ${reserva.data.especificaciones || "Ninguna"}<br>
-            <strong>Estado:</strong> <span id="estado-${index}">Pendiente</span><br>
-            <button onclick="confirmar(${index})">Marcar como realizada</button>
-            <button onclick="eliminar(${index})">Eliminar</button>
-          `;
-          contenedor.appendChild(div);
-        });
-      } catch (e) {
-        document.getElementById("listaReservas").innerHTML =
-          "<p>Error al cargar las reservas. Verifica tu conexión.</p>";
-      }
+  let opciones = [];
+  if (tipo === 'maid') {
+    opciones = [...realezaMaids];
+    if (rango === 'Imperial') opciones = opciones.concat(imperialMaidsExtra);
+  } else if (tipo === 'mayordomo') {
+    opciones = [...realezaMayordomos];
+    if (rango === 'Imperial') opciones = opciones.concat(imperialMayordomosExtra);
+  }
+
+  if (rango === 'Imperial') {
+    const select = document.createElement('select');
+    select.id = 'maid1';
+    opciones.forEach(nombre => {
+      const opt = document.createElement('option');
+      opt.value = nombre;
+      opt.textContent = nombre;
+      select.appendChild(opt);
+    });
+    contenedor.appendChild(document.createElement('label')).textContent = tipo === 'maid' ? 'Maid' : 'Mayordomo';
+    contenedor.appendChild(select);
+  } else {
+    for (let i = 1; i <= 3; i++) {
+      const select = document.createElement('select');
+      select.id = 'maid' + i;
+      opciones.forEach(nombre => {
+        const opt = document.createElement('option');
+        opt.value = nombre;
+        opt.textContent = nombre;
+        select.appendChild(opt);
+      });
+      contenedor.appendChild(document.createElement('label')).textContent = 'Opción ' + i;
+      contenedor.appendChild(select);
     }
+  }
+}
 
-    function confirmar(index) {
-      const estado = document.getElementById(`estado-${index}`);
-      if (estado) estado.textContent = "Realizada por " + admin;
-    }
+function enviarReserva() {
+  const fechaElegida = new Date(document.getElementById('fecha').value);
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  if (fechaElegida < hoy) {
+    alert('No puedes seleccionar una fecha pasada.');
+    return;
+  }
 
-    function eliminar(index) {
-      const confirmacion = confirm("¿Estás seguro de eliminar esta reserva?");
-      if (confirmacion) {
-        const reserva = document.getElementsByClassName("reserva")[index];
-        if (reserva) reserva.remove();
-      }
-    }
+  const rango = document.getElementById('rango').value;
+  const tipo = document.getElementById('tipo').value;
+  const opciones = [];
 
-    window.onload = cargarReservas;
-  </script>
-</body>
-</html>
+  for (let i = 1; i <= 3; i++) {
+    const elem = document.getElementById('maid' + i);
+    if (elem) opciones.push(elem.value);
+  }
+  if (opciones.length === 0) {
+    const uno = document.getElementById('maid1');
+    if (uno) opciones.push(uno.value);
+  }
+
+  const formData = {
+    NombreVR: document.getElementById('nombre_vr').value,
+    Discord: document.getElementById('nombre_discord').value,
+    Patreon: document.getElementById('nombre_patreon').value,
+    Rango: rango,
+    Tipo: tipo,
+    Opcion: opciones.join(', '),
+    Fecha: document.getElementById('fecha').value,
+    Especificaciones: document.getElementById('especificaciones').value
+  };
+
+  fetch(`${BACKEND_URL}/reservas`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => response.json())
+  .then(() => {
+    alert('Reserva enviada. ¡Gracias por apoyar a Royal Café!');
+  })
+  .catch(() => {
+    alert('Error al enviar la reserva');
+  });
+}
+
+function loginAdmin() {
+  const password = document.getElementById('admin_password').value;
+  const usuario = document.getElementById('admin_user').value;
+  if (password === ADMIN_PASSWORD) {
+    window.location.href = 'admin.html?admin=' + encodeURIComponent(usuario);
+  } else {
+    alert('Contraseña incorrecta');
+  }
+}
+
+window.onload = actualizarOpciones;
+</script>
 
 </body>
 </html>
