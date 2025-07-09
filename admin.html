@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Panel de Administración - Royal Café</title>
   <style>
     body {
@@ -29,6 +29,7 @@
       padding: 10px;
       border-radius: 6px;
       cursor: pointer;
+      margin-right: 10px;
     }
     button:hover {
       background-color: #e69e3d;
@@ -38,7 +39,13 @@
 <body>
   <h1>Panel de Administración - Royal Café</h1>
   <div id="adminInfo"></div>
-  <div id="contenedorReservas">Cargando reservas...</div>
+
+  <!-- Nuevas secciones para separar pendientes y realizadas -->
+  <h2>Reservas Pendientes</h2>
+  <div id="reservasPendientes">Cargando reservas pendientes...</div>
+
+  <h2>Reservas Realizadas</h2>
+  <div id="reservasRealizadas">Cargando reservas realizadas...</div>
 
   <script>
     const BACKEND_URL = 'https://royalcafe-backend.onrender.com';
@@ -51,11 +58,14 @@
       fetch(`${BACKEND_URL}/reservas`)
         .then(res => res.json())
         .then(reservas => {
-          const contenedor = document.getElementById('contenedorReservas');
-          contenedor.innerHTML = '';
+          const contPendientes = document.getElementById('reservasPendientes');
+          const contRealizadas = document.getElementById('reservasRealizadas');
+          contPendientes.innerHTML = '';
+          contRealizadas.innerHTML = '';
 
           if (reservas.length === 0) {
-            contenedor.innerHTML = '<p>No hay reservas existentes.</p>';
+            contPendientes.innerHTML = '<p>No hay reservas existentes.</p>';
+            contRealizadas.innerHTML = '';
             return;
           }
 
@@ -71,14 +81,33 @@
               <strong>Opción:</strong> ${r.fields.Opcion || ''}<br>
               <strong>Fecha:</strong> ${r.fields.Fecha || ''}<br>
               <strong>Especificaciones:</strong> ${r.fields.Especificaciones || ''}<br>
-              <button onclick="confirmarCita('${r.id}')">✅ Confirmar</button>
-              <button onclick="eliminarCita('${r.id}')">🗑️ Eliminar</button>
             `;
-            contenedor.appendChild(div);
+
+            // Solo agregar botón confirmar si no está confirmada
+            if (!r.fields.Confirmada) {
+              const confirmarBtn = document.createElement('button');
+              confirmarBtn.textContent = '✅ Confirmar';
+              confirmarBtn.onclick = () => confirmarCita(r.id);
+              div.appendChild(confirmarBtn);
+            }
+
+            // Botón eliminar siempre
+            const eliminarBtn = document.createElement('button');
+            eliminarBtn.textContent = '🗑️ Eliminar';
+            eliminarBtn.onclick = () => eliminarCita(r.id);
+            div.appendChild(eliminarBtn);
+
+            // Añadir al contenedor correcto
+            if (r.fields.Confirmada) {
+              contRealizadas.appendChild(div);
+            } else {
+              contPendientes.appendChild(div);
+            }
           });
         })
-        .catch(err => {
-          document.getElementById('contenedorReservas').innerHTML = 'Error al cargar reservas';
+        .catch(() => {
+          document.getElementById('reservasPendientes').innerHTML = 'Error al cargar reservas';
+          document.getElementById('reservasRealizadas').innerHTML = '';
         });
     }
 
@@ -90,9 +119,7 @@
     function confirmarCita(id) {
       fetch(`${BACKEND_URL}/reservas/${id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields: { Confirmada: true } })
       }).then(() => cargarReservas());
     }
@@ -101,3 +128,4 @@
   </script>
 </body>
 </html>
+
