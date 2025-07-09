@@ -99,6 +99,14 @@
 <script>
 const ADMIN_PASSWORD = 'RoyalCafeOctubre2024';
 const BACKEND_URL = 'https://royalcafe-backend.onrender.com';
+fetch('https://royalcafe-backend.onrender.com/reservas', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(datosFormulario)
+})
+
 
 const realezaMaids = ["Ruru", "Bluemar", "Mysti", "Neerilya", "Ghosty", "Evelyn", "Lilium", "Brishy", "Miirmo", "Nekoyari", "Chise", "Ponyon", "Rotten", "Himeko", "Nishimura", "Kuru", "Miki", "Innie", "Mitsuki", "Nyanithea", "Yuyu", "Aleah", "Laylumisumi", "Tomie", "Nisha", "Chumi", "Mizu", "Odette", "Kanna", "Alessia"];
 const imperialMaidsExtra = ["Momo", "Milkybel"];
